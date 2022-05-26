@@ -37,19 +37,46 @@ contract IronFistTournament is ERC721 {
 
     mapping(uint256 => CharacterAttributes) public nftHolderAttributes;
 
-    mapping(address => uint256) public nftHolders;
+    //MishimaCorp big boss which Tekken players need to defeat
+    struct BigBoss {
+        string name;
+        string imageURI;
+        uint256 hp;
+        uint256 maxHp;
+        uint256 attackDamage;
+    }
 
+    BigBoss public bigBoss;
     // Data passed in to the contract when it's first created initializing the characters.
     // We're going to actually pass these values in from run.js.
     constructor(
         string[] memory characterNames,
         string[] memory characterImageURIs,
         uint[] memory characterHp,
-        uint[] memory characterAttackDmg
+        uint[] memory characterAttackDmg,
+        string memory bossName, // These new variables would be passed in via run.js or deploy.js.
+        string memory bossImageURI,
+        uint bossHp,
+        uint bossAttackDamage
     )
-        ERC721("Tekken", "TEKK")
+    //Below, we initialize the name and symbol for the NFT collection where each NFT will have its own token_ID. This
+    //is indirect initialization done to the constructor of the base class from which the contract is derived, ie,
+    //ERC721. If you don't do this, you'll get an error asking you to mark the contract "IronFistTournament" as abstract
+    //due to the missing implementation of ERC721 contract's constructor.
+    ERC721("Tekken", "TEKK")
     {
-        // Loop through all the characters, and save their values in our contract so
+        // Initialize the boss. Save it to our global "bigBoss" state variable.
+        bigBoss = BigBoss({
+        name: bossName,
+        imageURI: bossImageURI,
+        hp: bossHp,
+        maxHp: bossHp,
+        attackDamage: bossAttackDamage
+        });
+
+        console.log("Done initializing boss %s w/ HP %s, img %s", bigBoss.name, bigBoss.hp, bigBoss.imageURI);
+
+        // In the constructor, we loop through all the characters, and save their values in our contract so
         // we can use them later when we mint our NFTs.
         for(uint i = 0; i < characterNames.length; i += 1) {
             defaultCharacters.push(CharacterAttributes({
@@ -68,7 +95,11 @@ contract IronFistTournament is ERC721 {
             //because that's the recommended approach (TODO: find out more on this)
             _tokenIds.increment();
         }
+
+        // All the other character code is below here is the same as before, just not showing it to keep things short!
     }
+
+    mapping(address => uint256) public nftHolders;
 
     //This is the fn that the user will interact with to mint a new NFT
     //by inputting their desired characterID
@@ -126,5 +157,44 @@ contract IronFistTournament is ERC721 {
         );
 
         return output;
+    }
+
+    function attackBoss() public {
+        // Get the state of the player's NFT.
+        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
+        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+
+        console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", player.name, player.hp, player.attackDamage);
+        console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
+
+        // Make sure the player has more than 0 HP.
+        require (
+            player.hp > 0,
+            "Error: character must have HP to attack boss."
+        );
+
+        // Make sure the boss has more than 0 HP.
+        require (
+            bigBoss.hp > 0,
+            "Error: boss must have HP to attack boss."
+        );
+
+        // Allow player to attack boss.
+        if (bigBoss.hp < player.attackDamage) {
+            bigBoss.hp = 0;
+        } else {
+            bigBoss.hp = bigBoss.hp - player.attackDamage;
+        }
+
+        // Allow boss to attack player.
+        if (player.hp < bigBoss.attackDamage) {
+            player.hp = 0;
+        } else {
+            player.hp = player.hp - bigBoss.attackDamage;
+        }
+
+        // Console for ease.
+        console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
+        console.log("Boss attacked player. New player hp: %s\n", player.hp);
     }
 }
