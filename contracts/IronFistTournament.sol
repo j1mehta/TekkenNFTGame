@@ -92,7 +92,10 @@ contract IronFistTournament is ERC721 {
             console.log("Done initializing %s w/ HP %s, img %s", c.name, c.hp, c.imageURI);
 
             //Lets increment the _tokenIds by 1 so the counting starts from 1 instead of 0,
-            //because that's the recommended approach (TODO: find out more on this)
+            //because that's the recommended approach. The reason for this is that we have a map which has tokenIds as
+            //value. Solidity maps have all the keys present by default and their corresponding defualt values are all
+            //set to zero. We don't want to have a real user key to be mapped to a zero value. Thus, let's avoid zero
+            //token value altogether.
             _tokenIds.increment();
         }
 
@@ -100,6 +103,8 @@ contract IronFistTournament is ERC721 {
     }
 
     mapping(address => uint256) public nftHolders;
+    event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
+    event AttackComplete(address sender, uint256 newBossHp, uint256 newPlayerHp);
 
     //This is the fn that the user will interact with to mint a new NFT
     //by inputting their desired characterID
@@ -128,6 +133,7 @@ contract IronFistTournament is ERC721 {
 
         // Increment the tokenId for the next person that uses it.
         _tokenIds.increment();
+        emit CharacterNFTMinted(msg.sender, newItemId, _characterIndex);
     }
 
     //Let's format our JSON file and encode it to Base64. Why? Coz that's the format
@@ -196,5 +202,61 @@ contract IronFistTournament is ERC721 {
         // Console for ease.
         console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
         console.log("Boss attacked player. New player hp: %s\n", player.hp);
+        emit AttackComplete(msg.sender, bigBoss.hp, player.hp);
     }
+
+    function checkIfUserHasNft() public view returns (CharacterAttributes memory) {
+        //Get the tokenId for caller's NFT
+        uint256 userNftTokenId = nftHolders[msg.sender];
+
+        //Its a solidity map, which is weird in the way that all keys and values exist and are mapped to zero bytes
+        //by default.  So, if a value exists for a key, it will be > 0
+        if(userNftTokenId > 0) {
+            return nftHolderAttributes[userNftTokenId];
+        } else {
+            CharacterAttributes memory emptyStruct;
+            return emptyStruct;
+        }
+    }
+
+    function getAllDefaultCharacters() public view returns (CharacterAttributes[] memory) {
+        return defaultCharacters;
+    }
+
+    function getBigBoss() public view returns (BigBoss memory) {
+        return bigBoss;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
