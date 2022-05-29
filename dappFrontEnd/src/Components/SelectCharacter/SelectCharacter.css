@@ -10,14 +10,14 @@
 .select-character-container .character-grid {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  grid-template-rows: repeat(auto-fit, minmax(300px, 1fr));
-  grid-row-gap: 15px;
+  grid-template-columns: repeat(2, minmax(350px, 10fr));
+  grid-template-rows: repeat(auto-fit, minmax(300px, 10fr));
+  grid-row-gap: 5px;
 }
 
 .character-grid .character-item {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   position: relative;
   justify-self: center;
   align-self: center;

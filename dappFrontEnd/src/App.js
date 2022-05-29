@@ -3,6 +3,16 @@ import './App.css';
 import SelectCharacter from './Components/SelectCharacter';
 import twitterLogo from './assets/twitter-logo.svg';
 
+// Import the two things that our frontend need to interact with our deployed contract.
+// Follow the below steps if you ever change your deployed contract:
+// 1. Deploy it again.
+// 2. Update the contract address on our frontend (copy/paste from console log).
+// 3. Update the abi file on our frontend (copy/paste from artifacts folder).
+import { CONTRACT_ADDRESS, transformCharacterData } from './constants';
+import IronFistTournament from "./utils/IronFistTournament.json"
+
+import {ethers} from "ethers";
+
 // Constants
 const TWITTER_HANDLE = 'j1mehta';
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
@@ -39,6 +49,16 @@ const App = () => {
     }
   };
 
+  const checkNetwork = async () => {
+    try {
+      if (window.ethereum.networkVersion !== '4') {
+        alert("Please connect to Rinkeby!")
+      }
+    } catch(error) {
+      console.log(error)
+    }
+  }
+
   /*
    * Implement your connectWallet method here
    */
@@ -72,6 +92,46 @@ const App = () => {
     checkIfWalletIsConnected();
   }, []);
 
+  // useEffect(() => {
+  //   checkNetwork();
+  // }, [currentAccount]);
+
+  useEffect( () => {
+
+    const fetchNFTMetadata = async () => {
+      console.log('Looking for your character NFT on address: ' + currentAccount);
+    }
+    //Provider are nodes provided by Metamsk to talk to Ethereum nodes
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    //Signer is an abstraction of an Ethereum account for signing messages/txns and send signed txns
+    //to the Etereum Network that execute state changing operations
+    const signer = provider.getSigner();
+    const gameContract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        IronFistTournament.abi,
+        signer
+    )
+
+    const txn = gameContract.checkIfUserHasNft();
+    if (txn.name) {
+      console.log('User has character NFT');
+      setCharacterNFT(transformCharacterData(txn));
+    } else {
+      console.log('No character NFT found');
+    }
+
+
+    /*
+   * We only want to run this, if we have a connected wallet
+   */
+    if (currentAccount) {
+      console.log('CurrentAccount:', currentAccount);
+      fetchNFTMetadata();
+    }
+
+  }, [currentAccount])
+
+
   const renderContent = () => {
     /*
      * Scenario #1
@@ -103,8 +163,8 @@ const App = () => {
       <div className="App">
         <div className="container">
           <div className="header-container">
-            <p className="header gradient-text">King of the Iron Fist Tournament</p>
-            <p className="sub-text">Survival is no game</p>
+            <p className="header gradient-text">TEKKEN</p>
+            <p className="sub-text">Battle of the NFTs</p>
             <div className="connect-wallet-container">
               {renderContent()}
           </div>
