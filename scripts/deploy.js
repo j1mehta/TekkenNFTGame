@@ -11,7 +11,7 @@ const main = async () => {
       [190, 300, 200, 185],                    // HP values
       [95, 110, 90, 100], // Attack damage values
       "DevilJim", //Check out the URL for the nerdy joke
-      "https://imgur.com/t/tekken7/98Z1pda",
+      "https://tenor.com/view/tekken-deviljin-kazama-gif-4902862",
       1000, //Boss HP
       200 //Boss attack
   );

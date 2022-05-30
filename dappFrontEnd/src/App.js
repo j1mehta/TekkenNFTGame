@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import SelectCharacter from './Components/SelectCharacter';
 import twitterLogo from './assets/twitter-logo.svg';
+import Arena from './Components/Arena';
 
 // Import the two things that our frontend need to interact with our deployed contract.
 // Follow the below steps if you ever change your deployed contract:
@@ -96,7 +97,7 @@ const App = () => {
   //   checkNetwork();
   // }, [currentAccount]);
 
-  useEffect( () => {
+  useEffect( async () => {
 
     const fetchNFTMetadata = async () => {
       console.log('Looking for your character NFT on address: ' + currentAccount);
@@ -112,7 +113,7 @@ const App = () => {
         signer
     )
 
-    const txn = gameContract.checkIfUserHasNft();
+    const txn = await gameContract.checkIfUserHasNft();
     if (txn.name) {
       console.log('User has character NFT');
       setCharacterNFT(transformCharacterData(txn));
@@ -151,12 +152,14 @@ const App = () => {
             </button>
           </div>
       );
-      /*
-       * Scenario #2
-       */
+
     } else if (currentAccount && !characterNFT) {
       return <SelectCharacter setCharacterNFT={setCharacterNFT} />;
+
+    } else if (currentAccount && characterNFT) {
+      return   <Arena characterNFT={characterNFT} setCharacterNFT={setCharacterNFT} />;
     }
+
   };
 
   return (
